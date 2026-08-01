@@ -1,0 +1,534 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0E1416;
+    --panel: #151D20;
+    --panel-raised: #1B2529;
+    --line: #26333730;
+    --line-strong: #2A3A3E;
+    --text-primary: #E9EEEF;
+    --text-secondary: #7E939C;
+    --text-tertiary: #56676E;
+    --naive: #E2574C;
+    --optimized: #F0B341;
+    --depot: #EDEEF0;
+    --accent-mono: 'IBM Plex Mono', monospace;
+    --accent-display: 'Space Grotesk', sans-serif;
+    --accent-body: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  #dispatch-root { background: var(--bg); color: var(--text-primary); font-family: var(--accent-body); padding: 28px 20px 40px; min-height: 100vh; }
+  .wrap { max-width: 1020px; margin: 0 auto; }
+  .eyebrow { font-family: var(--accent-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--optimized); text-transform: uppercase; margin-bottom: 8px; }
+  h1 { font-family: var(--accent-display); font-size: 28px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subhead { color: var(--text-secondary); font-size: 14px; margin: 0 0 22px; max-width: 620px; line-height: 1.5; }
+
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line-strong); border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden; margin-bottom: 18px; }
+  .kpi { background: var(--panel); padding: 16px 14px; }
+  .kpi-label { font-size: 10.5px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-family: var(--accent-mono); }
+  .kpi-value { font-family: var(--accent-mono); font-size: 22px; font-weight: 600; color: var(--optimized); line-height: 1; }
+  .kpi-value span { font-size: 12.5px; color: var(--text-secondary); font-weight: 400; }
+
+  .layout { display: grid; grid-template-columns: 1fr 260px; gap: 16px; margin-bottom: 18px; }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--panel); border: 1px solid var(--line-strong); border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+  .panel-title { font-family: var(--accent-display); font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .toggle-group { display: flex; gap: 6px; background: var(--panel-raised); padding: 3px; border-radius: 7px; }
+  .toggle-btn { font-family: var(--accent-mono); font-size: 11px; padding: 6px 12px; border-radius: 5px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; }
+  .toggle-btn.active { background: var(--panel); color: var(--optimized); }
+  .toggle-btn:hover:not(.active) { color: var(--text-primary); }
+
+  .map-legend { display: flex; gap: 14px; font-family: var(--accent-mono); font-size: 10.5px; color: var(--text-secondary); margin-top: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 13px; height: 3px; border-radius: 2px; }
+
+  .btn { font-family: var(--accent-mono); font-size: 11px; color: var(--bg); background: var(--optimized); border: none; padding: 7px 13px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--line-strong); }
+  .btn.ghost.on { color: var(--optimized); border-color: var(--optimized); }
+  .btn.small { padding: 4px 9px; font-size: 10px; }
+
+  svg text.stop-label { font-family: var(--accent-mono); font-size: 8px; fill: var(--text-tertiary); }
+  #map-svg { cursor: default; }
+  #map-svg.add-mode { cursor: crosshair; }
+
+  /* side panel: params + stop editor */
+  .side-panel { display: flex; flex-direction: column; gap: 14px; }
+  .field-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .field-row label { font-size: 11.5px; color: var(--text-secondary); font-family: var(--accent-mono); }
+  .field-row input[type=number] { width: 72px; background: var(--panel-raised); border: 1px solid var(--line-strong); border-radius: 6px; color: var(--text-primary); font-family: var(--accent-mono); font-size: 12px; padding: 5px 7px; }
+  .field-row input[type=range] { width: 100%; accent-color: var(--optimized); }
+
+  .stop-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+  .stop-row { display: flex; align-items: center; gap: 6px; background: var(--panel-raised); border-radius: 6px; padding: 5px 7px; }
+  .stop-row .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .stop-row input { flex: 1; background: transparent; border: none; color: var(--text-primary); font-size: 11.5px; font-family: var(--accent-body); outline: none; min-width: 0; }
+  .stop-row .rm { background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 13px; padding: 0 3px; }
+  .stop-row .rm:hover { color: var(--naive); }
+
+  .driver-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; }
+  .driver-table th { text-align: left; font-family: var(--accent-mono); font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 8px; border-bottom: 1px solid var(--line-strong); }
+  .driver-table td { padding: 7px 8px; border-bottom: 1px solid var(--line); color: var(--text-secondary); }
+  .driver-table td.num { font-family: var(--accent-mono); color: var(--text-primary); }
+  .driver-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: middle; }
+
+  .console-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .console-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--optimized); box-shadow: 0 0 6px var(--optimized); }
+  .console-sub { color: var(--text-tertiary); font-size: 12px; margin-bottom: 14px; }
+  .chat-log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; max-height: 240px; overflow-y: auto; }
+  .msg { font-size: 13px; line-height: 1.55; padding: 10px 12px; border-radius: 8px; max-width: 90%; }
+  .msg.user { background: var(--panel-raised); color: var(--text-primary); align-self: flex-end; font-family: var(--accent-mono); font-size: 12.5px; }
+  .msg.ai { background: transparent; border: 1px solid var(--line-strong); color: var(--text-primary); align-self: flex-start; }
+  .msg.ai .tag { font-family: var(--accent-mono); font-size: 10px; color: var(--optimized); display: block; margin-bottom: 6px; letter-spacing: 0.06em; }
+  .console-input-row { display: flex; gap: 8px; }
+  .console-input { flex: 1; background: var(--panel-raised); border: 1px solid var(--line-strong); border-radius: 7px; padding: 10px 12px; color: var(--text-primary); font-family: var(--accent-body); font-size: 13px; outline: none; }
+  .console-input:focus { border-color: var(--optimized); }
+  .console-send { background: var(--optimized); color: var(--bg); border: none; padding: 0 18px; border-radius: 7px; font-family: var(--accent-mono); font-size: 12px; font-weight: 600; cursor: pointer; }
+  .console-send:disabled { opacity: 0.5; cursor: default; }
+  .quick-prompts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .quick-prompt { font-family: var(--accent-mono); font-size: 10.5px; color: var(--text-secondary); border: 1px solid var(--line-strong); background: transparent; padding: 5px 10px; border-radius: 14px; cursor: pointer; }
+  .quick-prompt:hover { color: var(--optimized); border-color: var(--optimized); }
+
+  .methodology { font-size: 11.5px; color: var(--text-tertiary); line-height: 1.6; border-top: 1px solid var(--line-strong); padding-top: 14px; margin-top: 8px; }
+  .methodology b { color: var(--text-secondary); }
+  .hint { font-size: 11px; color: var(--text-tertiary); margin-top: 8px; }
+</style>
+
+<div id="dispatch-root">
+  <div class="wrap">
+    <div class="eyebrow">Supply Chain Digital Twin · Last-Mile Delivery · Fleet Simulation</div>
+    <h1>MetroSwift Fleet Route Intelligence</h1>
+    <p class="subhead">Stops are split across drivers using a sweep (pie-slice) clustering heuristic, then each driver's route is optimized with nearest-neighbor + 2-opt. Add stops, change the driver count, or adjust cost assumptions — everything recalculates live.</p>
+
+    <div class="kpi-strip" id="kpi-strip"></div>
+
+    <div class="layout">
+      <div class="panel" style="margin-bottom:0;">
+        <div class="panel-head">
+          <div class="panel-title">Fleet Route Comparison</div>
+          <div class="toggle-group" id="toggle-group">
+            <button class="toggle-btn" data-mode="naive">Before</button>
+            <button class="toggle-btn active" data-mode="optimized">After</button>
+            <button class="toggle-btn" data-mode="compare">Compare</button>
+          </div>
+        </div>
+        <svg id="map-svg" viewBox="0 0 760 460" style="width:100%; height:auto; display:block;"></svg>
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap: wrap; gap:8px;">
+          <div class="map-legend" id="map-legend"></div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn ghost" id="add-mode-btn">+ Click Map to Add Stop</button>
+            <button class="btn ghost" id="replay-btn">Replay Draw-In</button>
+          </div>
+        </div>
+        <div class="hint" id="add-hint" style="display:none;">Click anywhere on the map to drop a new stop there.</div>
+      </div>
+
+      <div class="side-panel">
+        <div class="panel" style="margin-bottom:0;">
+          <div class="panel-title" style="margin-bottom:12px;">Fleet Parameters</div>
+          <div class="field-row"><label>Drivers</label><input type="number" id="param-drivers" min="1" max="8" value="3"></div>
+          <div class="field-row"><label>Cost / km ($)</label><input type="number" id="param-cost" min="0.1" step="0.05" value="0.72"></div>
+          <div class="field-row"><label>Avg speed (km/h)</label><input type="number" id="param-speed" min="5" max="100" value="35"></div>
+          <div class="field-row"><label>Work days / yr</label><input type="number" id="param-workdays" min="1" max="365" value="260"></div>
+        </div>
+        <div class="panel" style="margin-bottom:0; flex:1;">
+          <div class="panel-head"><div class="panel-title">Stops (<span id="stop-count">0</span>)</div><button class="btn small" id="add-stop-btn">+ Add</button></div>
+          <div class="stop-list" id="stop-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:10px;">Per-Driver Breakdown</div>
+      <table class="driver-table">
+        <thead><tr><th>Driver</th><th>Stops</th><th>Before (km)</th><th>After (km)</th><th>Saved</th></tr></thead>
+        <tbody id="driver-table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="console-head"><div class="console-dot"></div><div class="panel-title">AI Dispatch Console</div></div>
+      <div class="console-sub">Ask about constraints (time windows, priority stops) or ask the AI to explain the current fleet plan. Powered by Claude.</div>
+      <div class="quick-prompts" id="quick-prompts">
+        <button class="quick-prompt" data-q="Explain how stops were split across the drivers and why each driver's route makes sense.">Explain the fleet plan</button>
+        <button class="quick-prompt" data-q="One customer needs delivery before 10am. How would that constraint be handled?">Add a time constraint</button>
+        <button class="quick-prompt" data-q="If we added a 4th driver, what would likely happen to total distance and cost?">What if we add a driver?</button>
+      </div>
+      <div class="chat-log" id="chat-log"></div>
+      <div class="console-input-row">
+        <input class="console-input" id="console-input" placeholder="e.g. Should driver 2 take fewer stops?" />
+        <button class="console-send" id="console-send">Send</button>
+      </div>
+    </div>
+
+    <div class="methodology">
+      <b>Methodology:</b> Synthetic delivery data for a simulated Seattle-metro operator ("MetroSwift"). Fleet split uses a sweep heuristic — customers are ordered by compass angle from the depot and divided into contiguous pie-slice zones, one per driver (a standard cluster-first, route-second VRP approach). Each zone is then routed with nearest-neighbor construction + 2-opt local search. The "Before" baseline splits the same stop list into equal-sized chunks in entry order, with no geographic or route logic — approximating an unassisted dispatcher. AI Layer 2 is an LLM (Claude) that interprets natural-language constraints and explains the plan in plain English; it does not itself re-run the optimizer.
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const SEED = {"depot": {"name": "MetroSwift Distribution Center", "lat": 47.674, "lon": -122.1215}, "stops": [{"id": 1, "name": "Riverside Cafe", "lat": 47.68655, "lon": -122.1785}, {"id": 2, "name": "Blue Heron Apartments", "lat": 47.65375, "lon": -122.15471}, {"id": 3, "name": "Overlake Med Plaza", "lat": 47.69528, "lon": -122.1003}, {"id": 4, "name": "Cedar Park Elementary", "lat": 47.7093, "lon": -122.17107}, {"id": 5, "name": "Willowbrook Retail", "lat": 47.66697, "lon": -122.17792}, {"id": 6, "name": "Northgate Office Park", "lat": 47.64868, "lon": -122.12086}, {"id": 7, "name": "Lakeview Condos", "lat": 47.63139, "lon": -122.15764}, {"id": 8, "name": "Maple Grove Bakery", "lat": 47.68749, "lon": -122.11611}, {"id": 9, "name": "Foothills Hardware", "lat": 47.64884, "lon": -122.11079}, {"id": 10, "name": "Sunset Ridge HOA", "lat": 47.70185, "lon": -122.18072}, {"id": 11, "name": "Downtown Legal Group", "lat": 47.70152, "lon": -122.09772}, {"id": 12, "name": "Pinecrest Dental", "lat": 47.65962, "lon": -122.16284}, {"id": 13, "name": "Harborview Storage", "lat": 47.71515, "lon": -122.14111}, {"id": 14, "name": "Ridgemont Pharmacy", "lat": 47.63735, "lon": -122.16989}, {"id": 15, "name": "Eastside Fitness Club", "lat": 47.70527, "lon": -122.10905}, {"id": 16, "name": "Juniper Lane Homes", "lat": 47.70164, "lon": -122.09393}, {"id": 17, "name": "Techview Startups Inc", "lat": 47.67726, "lon": -122.06473}, {"id": 18, "name": "Green Valley Nursery", "lat": 47.66307, "lon": -122.11526}]};
+  const DRIVER_COLORS = ['#F0B341', '#4EA1D3', '#8BD3A0', '#C77DFF', '#FF8F6B', '#5FD4D4', '#E8B4E0', '#9FD65C'];
+
+  const state = {
+    depot: SEED.depot,
+    stops: SEED.stops.map(s => ({ ...s })),
+    params: { drivers: 3, costPerKm: 0.72, speedKmh: 35, workDays: 260 },
+    mode: 'optimized',
+    addMode: false,
+  };
+  let nextId = Math.max(...state.stops.map(s => s.id)) + 1;
+  let lastProjection = null; // {lonMin, latMin, cosLat, scale, W, H, PAD}
+
+  // ---------- geometry ----------
+  function haversineKm(a, b) {
+    const R = 6371;
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
+    const h = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  function routeDistance(pts) {
+    let d = 0;
+    for (let i = 0; i < pts.length - 1; i++) d += haversineKm(pts[i], pts[i+1]);
+    return d;
+  }
+  function nearestNeighborRoute(depot, pts) {
+    const unvisited = pts.slice();
+    const route = [depot];
+    let current = depot;
+    while (unvisited.length) {
+      let bestIdx = 0, bestD = Infinity;
+      unvisited.forEach((p, i) => { const d = haversineKm(current, p); if (d < bestD) { bestD = d; bestIdx = i; } });
+      const nxt = unvisited.splice(bestIdx, 1)[0];
+      route.push(nxt);
+      current = nxt;
+    }
+    route.push(depot);
+    return route;
+  }
+  function twoOpt(route) {
+    let best = route.slice();
+    let improved = true;
+    let guard = 0;
+    while (improved && guard < 200) {
+      improved = false; guard++;
+      for (let i = 1; i < best.length - 2; i++) {
+        for (let j = i + 1; j < best.length - 1; j++) {
+          if (j - i === 1) continue;
+          const candidate = best.slice(0, i).concat(best.slice(i, j).reverse(), best.slice(j));
+          if (routeDistance(candidate) < routeDistance(best) - 1e-9) { best = candidate; improved = true; }
+        }
+      }
+    }
+    return best;
+  }
+
+  function sweepClusters(depot, stops, n) {
+    if (stops.length === 0) return Array.from({length: n}, () => []);
+    const withAngle = stops.map(s => ({ s, angle: Math.atan2(s.lat - depot.lat, (s.lon - depot.lon) * Math.cos(depot.lat * Math.PI/180)) }));
+    withAngle.sort((a, b) => a.angle - b.angle);
+    const ordered = withAngle.map(o => o.s);
+    const clusters = Array.from({length: n}, () => []);
+    const base = Math.floor(ordered.length / n), rem = ordered.length % n;
+    let idx = 0;
+    for (let d = 0; d < n; d++) {
+      const count = base + (d < rem ? 1 : 0);
+      clusters[d] = ordered.slice(idx, idx + count);
+      idx += count;
+    }
+    return clusters;
+  }
+  function naiveClusters(stops, n) {
+    const clusters = Array.from({length: n}, () => []);
+    const base = Math.floor(stops.length / n), rem = stops.length % n;
+    let idx = 0;
+    for (let d = 0; d < n; d++) {
+      const count = base + (d < rem ? 1 : 0);
+      clusters[d] = stops.slice(idx, idx + count);
+      idx += count;
+    }
+    return clusters;
+  }
+
+  function computeFleet() {
+    const n = Math.max(1, Math.min(state.params.drivers, Math.max(1, state.stops.length)));
+    const optClusters = sweepClusters(state.depot, state.stops, n);
+    const naiClusters = naiveClusters(state.stops, n);
+    const optRoutes = optClusters.map(c => c.length ? twoOpt(nearestNeighborRoute(state.depot, c)) : [state.depot, state.depot]);
+    const naiRoutes = naiClusters.map(c => [state.depot, ...c, state.depot]);
+    return { n, optRoutes, naiRoutes };
+  }
+
+  // ---------- rendering ----------
+  const svg = document.getElementById('map-svg');
+  const W = 760, H = 460, PAD = 46;
+
+  function project(p, bounds) {
+    const x = (p.lon - bounds.lonMin) * bounds.cosLat;
+    const y = (p.lat - bounds.latMin);
+    return { x: bounds.PAD + x * bounds.scale, y: bounds.H - bounds.PAD - y * bounds.scale };
+  }
+  function computeBounds() {
+    const all = [state.depot, ...state.stops];
+    const lats = all.map(p => p.lat), lons = all.map(p => p.lon);
+    const latMin = Math.min(...lats), latMax = Math.max(...lats);
+    const lonMin = Math.min(...lons), lonMax = Math.max(...lons);
+    const latMid = (latMin + latMax) / 2;
+    const cosLat = Math.cos(latMid * Math.PI / 180);
+    const xMax = (lonMax - lonMin) * cosLat, yMax = (latMax - latMin);
+    const scale = Math.min((W - 2*PAD) / (xMax || 1), (H - 2*PAD) / (yMax || 1));
+    return { lonMin, latMin, cosLat, scale, W, H, PAD };
+  }
+  function unproject(x, y, bounds) {
+    const relX = (x - bounds.PAD) / bounds.scale;
+    const relY = (bounds.H - bounds.PAD - y) / bounds.scale;
+    return { lon: bounds.lonMin + relX / bounds.cosLat, lat: bounds.latMin + relY };
+  }
+
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function pathD(route, bounds) {
+    return route.map((p, i) => { const s = project(p, bounds); return (i===0?'M':'L') + s.x.toFixed(1) + ',' + s.y.toFixed(1); }).join(' ');
+  }
+
+  let fleet = null;
+
+  function render() {
+    fleet = computeFleet();
+    lastProjection = computeBounds();
+    const bounds = lastProjection;
+    svg.innerHTML = '';
+    for (let gx = PAD; gx < W - PAD + 1; gx += 60) svg.appendChild(el('line', { x1: gx, y1: PAD-10, x2: gx, y2: H-PAD+10, stroke: '#24333722', 'stroke-width': 1 }));
+
+    const showNaive = state.mode === 'naive' || state.mode === 'compare';
+    const showOpt = state.mode === 'optimized' || state.mode === 'compare';
+
+    if (showNaive) {
+      fleet.naiRoutes.forEach((route) => {
+        svg.appendChild(el('path', { d: pathD(route, bounds), fill: 'none', stroke: 'var(--naive)', 'stroke-width': state.mode==='compare'?2:2.5, 'stroke-linejoin':'round', opacity: state.mode==='compare'?0.5:0.9 }));
+      });
+    }
+    if (showOpt) {
+      fleet.optRoutes.forEach((route, di) => {
+        svg.appendChild(el('path', { class: 'opt-path-'+di, d: pathD(route, bounds), fill: 'none', stroke: DRIVER_COLORS[di % DRIVER_COLORS.length], 'stroke-width': 2.75, 'stroke-linejoin':'round', 'stroke-linecap':'round' }));
+      });
+    }
+
+    // depot
+    const d = project(state.depot, bounds);
+    svg.appendChild(el('rect', { x: d.x-6, y: d.y-6, width: 12, height: 12, fill: 'var(--depot)', rx: 2 }));
+
+    // stop markers colored by which driver owns them (based on optimized clusters for consistency)
+    const ownerColor = {};
+    fleet.optRoutes.forEach((route, di) => { route.forEach(p => { if (p.id) ownerColor[p.id] = DRIVER_COLORS[di % DRIVER_COLORS.length]; }); });
+
+    state.stops.forEach(p => {
+      const s = project(p, bounds);
+      const color = state.mode === 'naive' ? 'var(--naive)' : (ownerColor[p.id] || 'var(--optimized)');
+      svg.appendChild(el('circle', { cx: s.x, cy: s.y, r: 7, fill: 'var(--bg)', stroke: color, 'stroke-width': 1.5 }));
+      const name = el('text', { x: s.x, y: s.y - 11, class: 'stop-label', 'text-anchor': 'middle' });
+      name.textContent = p.name.length > 14 ? p.name.slice(0,13) + '…' : p.name;
+      svg.appendChild(name);
+    });
+
+    if (showOpt) requestAnimationFrame(() => animateDrawIn());
+    renderLegend();
+    renderKPIs();
+    renderDriverTable();
+    renderStopList();
+  }
+
+  function animateDrawIn() {
+    (fleet.optRoutes || []).forEach((_, di) => {
+      const path = svg.querySelector('.opt-path-' + di);
+      if (!path) return;
+      const len = path.getTotalLength();
+      path.style.transition = 'none';
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      path.getBoundingClientRect();
+      path.style.transition = 'stroke-dashoffset 1.1s ease';
+      requestAnimationFrame(() => { path.style.strokeDashoffset = 0; });
+    });
+  }
+
+  function renderLegend() {
+    const legend = document.getElementById('map-legend');
+    legend.innerHTML = '';
+    const items = [{ label: 'Depot', color: 'var(--depot)' }];
+    if (state.mode !== 'optimized') items.push({ label: 'Before (naive)', color: 'var(--naive)' });
+    if (state.mode !== 'naive') {
+      fleet.optRoutes.forEach((_, di) => items.push({ label: 'Driver ' + (di+1), color: DRIVER_COLORS[di % DRIVER_COLORS.length] }));
+    }
+    items.forEach(it => {
+      const div = document.createElement('div'); div.className = 'legend-item';
+      div.innerHTML = `<div class="legend-swatch" style="background:${it.color}"></div>${it.label}`;
+      legend.appendChild(div);
+    });
+  }
+
+  function renderKPIs() {
+    const naiveKm = fleet.naiRoutes.reduce((s, r) => s + routeDistance(r), 0);
+    const optKm = fleet.optRoutes.reduce((s, r) => s + routeDistance(r), 0);
+    const savedKm = naiveKm - optKm;
+    const pct = naiveKm > 0 ? (savedKm / naiveKm) * 100 : 0;
+    const naiveHr = naiveKm / state.params.speedKmh, optHr = optKm / state.params.speedKmh;
+    const minutesSaved = (naiveHr - optHr) * 60;
+    const dailyCostSaved = savedKm * state.params.costPerKm;
+    const annualSaved = dailyCostSaved * state.params.workDays;
+
+    const kpis = [
+      { label: 'Fleet distance saved', value: pct.toFixed(1) + '%', sub: savedKm.toFixed(1) + ' km/day' },
+      { label: 'Total time saved / day', value: Math.round(minutesSaved), sub: 'minutes, all drivers' },
+      { label: 'Fleet savings / day', value: '$' + dailyCostSaved.toLocaleString(undefined, {maximumFractionDigits:0}), sub: fleet.n + ' driver' + (fleet.n>1?'s':'') },
+      { label: 'Projected annual savings', value: '$' + Math.round(annualSaved).toLocaleString(), sub: state.params.workDays + ' work days' },
+    ];
+    const strip = document.getElementById('kpi-strip');
+    strip.innerHTML = '';
+    kpis.forEach(k => {
+      const div = document.createElement('div'); div.className = 'kpi';
+      div.innerHTML = `<div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value} <span>${k.sub}</span></div>`;
+      strip.appendChild(div);
+    });
+  }
+
+  function renderDriverTable() {
+    const body = document.getElementById('driver-table-body');
+    body.innerHTML = '';
+    fleet.optRoutes.forEach((route, di) => {
+      const naiveKm = routeDistance(fleet.naiRoutes[di]);
+      const optKm = routeDistance(route);
+      const saved = naiveKm > 0 ? ((naiveKm - optKm) / naiveKm * 100) : 0;
+      const stopCount = route.filter(p => p.id).length;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><span class="driver-swatch" style="background:${DRIVER_COLORS[di % DRIVER_COLORS.length]}"></span>Driver ${di+1}</td>
+        <td class="num">${stopCount}</td><td class="num">${naiveKm.toFixed(1)}</td><td class="num">${optKm.toFixed(1)}</td><td class="num">${saved.toFixed(0)}%</td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  function renderStopList() {
+    const list = document.getElementById('stop-list');
+    document.getElementById('stop-count').textContent = state.stops.length;
+    list.innerHTML = '';
+    const ownerColor = {};
+    fleet.optRoutes.forEach((route, di) => { route.forEach(p => { if (p.id) ownerColor[p.id] = DRIVER_COLORS[di % DRIVER_COLORS.length]; }); });
+    state.stops.forEach(stop => {
+      const row = document.createElement('div'); row.className = 'stop-row';
+      const color = ownerColor[stop.id] || 'var(--text-tertiary)';
+      row.innerHTML = `<div class="dot" style="background:${color}"></div><input value="${stop.name.replace(/"/g,'&quot;')}" data-id="${stop.id}"><button class="rm" data-id="${stop.id}">✕</button>`;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const id = parseInt(inp.dataset.id);
+        const stop = state.stops.find(s => s.id === id);
+        if (stop) stop.name = inp.value || stop.name;
+        render();
+      });
+    });
+    list.querySelectorAll('.rm').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.id);
+        state.stops = state.stops.filter(s => s.id !== id);
+        render();
+      });
+    });
+  }
+
+  // ---------- controls ----------
+  document.querySelectorAll('#toggle-group .toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#toggle-group .toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.mode = btn.dataset.mode;
+      render();
+    });
+  });
+  document.getElementById('replay-btn').addEventListener('click', render);
+
+  document.getElementById('param-drivers').addEventListener('change', e => { state.params.drivers = Math.max(1, parseInt(e.target.value)||1); render(); });
+  document.getElementById('param-cost').addEventListener('change', e => { state.params.costPerKm = Math.max(0.01, parseFloat(e.target.value)||0.72); render(); });
+  document.getElementById('param-speed').addEventListener('change', e => { state.params.speedKmh = Math.max(1, parseFloat(e.target.value)||35); render(); });
+  document.getElementById('param-workdays').addEventListener('change', e => { state.params.workDays = Math.max(1, parseInt(e.target.value)||260); render(); });
+
+  document.getElementById('add-stop-btn').addEventListener('click', () => {
+    const jitterLat = (Math.random()-0.5) * 0.03, jitterLon = (Math.random()-0.5) * 0.04;
+    state.stops.push({ id: nextId++, name: 'New Stop ' + (state.stops.length+1), lat: state.depot.lat + jitterLat, lon: state.depot.lon + jitterLon });
+    render();
+  });
+
+  const addModeBtn = document.getElementById('add-mode-btn');
+  addModeBtn.addEventListener('click', () => {
+    state.addMode = !state.addMode;
+    addModeBtn.classList.toggle('on', state.addMode);
+    svg.classList.toggle('add-mode', state.addMode);
+    document.getElementById('add-hint').style.display = state.addMode ? 'block' : 'none';
+  });
+  svg.addEventListener('click', (e) => {
+    if (!state.addMode || !lastProjection) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = W / rect.width, scaleY = H / rect.height;
+    const x = (e.clientX - rect.left) * scaleX, y = (e.clientY - rect.top) * scaleY;
+    const ll = unproject(x, y, lastProjection);
+    state.stops.push({ id: nextId++, name: 'New Stop ' + (state.stops.length+1), lat: ll.lat, lon: ll.lon });
+    render();
+  });
+
+  // ---------- AI console ----------
+  const chatLog = document.getElementById('chat-log');
+  const input = document.getElementById('console-input');
+  const sendBtn = document.getElementById('console-send');
+
+  function addMsg(role, text) {
+    const div = document.createElement('div'); div.className = 'msg ' + role;
+    div.innerHTML = role === 'ai' ? '<span class="tag">AI DISPATCHER</span>' + text : text;
+    chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
+    return div;
+  }
+
+  function fleetSummary() {
+    return fleet.optRoutes.map((route, di) => {
+      const names = route.filter(p => p.id).map(p => p.name).join(', ');
+      return `Driver ${di+1} (${route.filter(p=>p.id).length} stops): ${names}`;
+    }).join(' | ');
+  }
+
+  async function askAI(question) {
+    addMsg('user', question);
+    const thinking = addMsg('ai', 'Thinking…');
+    sendBtn.disabled = true;
+    try {
+      const naiveKm = fleet.naiRoutes.reduce((s,r)=>s+routeDistance(r),0);
+      const optKm = fleet.optRoutes.reduce((s,r)=>s+routeDistance(r),0);
+      const systemPrompt = `You are an AI dispatch assistant for MetroSwift Delivery, a last-mile courier operation running ${fleet.n} drivers today.
+Current fleet plan (sweep clustering + 2-opt per driver): ${fleetSummary()}.
+Total optimized distance ${optKm.toFixed(1)} km vs a naive equal-split baseline of ${naiveKm.toFixed(1)} km.
+Answer the dispatcher's question in 2-4 concise sentences, plain English, referencing specific driver numbers or stop names where relevant. If asked a hypothetical (new constraint, adding a driver), reason qualitatively about the likely effect without pretending to re-run the optimizer yourself.`;
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, system: systemPrompt, messages: [{ role: "user", content: question }] })
+      });
+      const data = await response.json();
+      const text = (data.content || []).map(b => b.text || '').join('\n').trim() || 'No response received.';
+      thinking.innerHTML = '<span class="tag">AI DISPATCHER</span>' + text;
+    } catch (err) {
+      thinking.innerHTML = '<span class="tag">AI DISPATCHER</span>Could not reach the AI service right now.';
+      console.error(err);
+    }
+    sendBtn.disabled = false;
+  }
+
+  sendBtn.addEventListener('click', () => { const q = input.value.trim(); if (!q) return; input.value=''; askAI(q); });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') sendBtn.click(); });
+  document.querySelectorAll('.quick-prompt').forEach(btn => btn.addEventListener('click', () => askAI(btn.dataset.q)));
+
+  render();
+})();
+</script>

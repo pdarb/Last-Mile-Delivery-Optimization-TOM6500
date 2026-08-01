@@ -1,0 +1,369 @@
+{
+  "depot": {
+    "name": "MetroSwift Distribution Center",
+    "lat": 47.674,
+    "lon": -122.1215
+  },
+  "customers": [
+    {
+      "id": 1,
+      "name": "Riverside Cafe",
+      "lat": 47.68655,
+      "lon": -122.1785
+    },
+    {
+      "id": 2,
+      "name": "Blue Heron Apartments",
+      "lat": 47.65375,
+      "lon": -122.15471
+    },
+    {
+      "id": 3,
+      "name": "Overlake Med Plaza",
+      "lat": 47.69528,
+      "lon": -122.1003
+    },
+    {
+      "id": 4,
+      "name": "Cedar Park Elementary",
+      "lat": 47.7093,
+      "lon": -122.17107
+    },
+    {
+      "id": 5,
+      "name": "Willowbrook Retail",
+      "lat": 47.66697,
+      "lon": -122.17792
+    },
+    {
+      "id": 6,
+      "name": "Northgate Office Park",
+      "lat": 47.64868,
+      "lon": -122.12086
+    },
+    {
+      "id": 7,
+      "name": "Lakeview Condos",
+      "lat": 47.63139,
+      "lon": -122.15764
+    },
+    {
+      "id": 8,
+      "name": "Maple Grove Bakery",
+      "lat": 47.68749,
+      "lon": -122.11611
+    },
+    {
+      "id": 9,
+      "name": "Foothills Hardware",
+      "lat": 47.64884,
+      "lon": -122.11079
+    },
+    {
+      "id": 10,
+      "name": "Sunset Ridge HOA",
+      "lat": 47.70185,
+      "lon": -122.18072
+    },
+    {
+      "id": 11,
+      "name": "Downtown Legal Group",
+      "lat": 47.70152,
+      "lon": -122.09772
+    },
+    {
+      "id": 12,
+      "name": "Pinecrest Dental",
+      "lat": 47.65962,
+      "lon": -122.16284
+    },
+    {
+      "id": 13,
+      "name": "Harborview Storage",
+      "lat": 47.71515,
+      "lon": -122.14111
+    },
+    {
+      "id": 14,
+      "name": "Ridgemont Pharmacy",
+      "lat": 47.63735,
+      "lon": -122.16989
+    },
+    {
+      "id": 15,
+      "name": "Eastside Fitness Club",
+      "lat": 47.70527,
+      "lon": -122.10905
+    },
+    {
+      "id": 16,
+      "name": "Juniper Lane Homes",
+      "lat": 47.70164,
+      "lon": -122.09393
+    },
+    {
+      "id": 17,
+      "name": "Techview Startups Inc",
+      "lat": 47.67726,
+      "lon": -122.06473
+    },
+    {
+      "id": 18,
+      "name": "Green Valley Nursery",
+      "lat": 47.66307,
+      "lon": -122.11526
+    }
+  ],
+  "naive_route": [
+    {
+      "name": "MetroSwift Distribution Center",
+      "lat": 47.674,
+      "lon": -122.1215
+    },
+    {
+      "id": 1,
+      "name": "Riverside Cafe",
+      "lat": 47.68655,
+      "lon": -122.1785
+    },
+    {
+      "id": 2,
+      "name": "Blue Heron Apartments",
+      "lat": 47.65375,
+      "lon": -122.15471
+    },
+    {
+      "id": 3,
+      "name": "Overlake Med Plaza",
+      "lat": 47.69528,
+      "lon": -122.1003
+    },
+    {
+      "id": 4,
+      "name": "Cedar Park Elementary",
+      "lat": 47.7093,
+      "lon": -122.17107
+    },
+    {
+      "id": 5,
+      "name": "Willowbrook Retail",
+      "lat": 47.66697,
+      "lon": -122.17792
+    },
+    {
+      "id": 6,
+      "name": "Northgate Office Park",
+      "lat": 47.64868,
+      "lon": -122.12086
+    },
+    {
+      "id": 7,
+      "name": "Lakeview Condos",
+      "lat": 47.63139,
+      "lon": -122.15764
+    },
+    {
+      "id": 8,
+      "name": "Maple Grove Bakery",
+      "lat": 47.68749,
+      "lon": -122.11611
+    },
+    {
+      "id": 9,
+      "name": "Foothills Hardware",
+      "lat": 47.64884,
+      "lon": -122.11079
+    },
+    {
+      "id": 10,
+      "name": "Sunset Ridge HOA",
+      "lat": 47.70185,
+      "lon": -122.18072
+    },
+    {
+      "id": 11,
+      "name": "Downtown Legal Group",
+      "lat": 47.70152,
+      "lon": -122.09772
+    },
+    {
+      "id": 12,
+      "name": "Pinecrest Dental",
+      "lat": 47.65962,
+      "lon": -122.16284
+    },
+    {
+      "id": 13,
+      "name": "Harborview Storage",
+      "lat": 47.71515,
+      "lon": -122.14111
+    },
+    {
+      "id": 14,
+      "name": "Ridgemont Pharmacy",
+      "lat": 47.63735,
+      "lon": -122.16989
+    },
+    {
+      "id": 15,
+      "name": "Eastside Fitness Club",
+      "lat": 47.70527,
+      "lon": -122.10905
+    },
+    {
+      "id": 16,
+      "name": "Juniper Lane Homes",
+      "lat": 47.70164,
+      "lon": -122.09393
+    },
+    {
+      "id": 17,
+      "name": "Techview Startups Inc",
+      "lat": 47.67726,
+      "lon": -122.06473
+    },
+    {
+      "id": 18,
+      "name": "Green Valley Nursery",
+      "lat": 47.66307,
+      "lon": -122.11526
+    },
+    {
+      "name": "MetroSwift Distribution Center",
+      "lat": 47.674,
+      "lon": -122.1215
+    }
+  ],
+  "optimized_route": [
+    {
+      "name": "MetroSwift Distribution Center",
+      "lat": 47.674,
+      "lon": -122.1215
+    },
+    {
+      "id": 8,
+      "name": "Maple Grove Bakery",
+      "lat": 47.68749,
+      "lon": -122.11611
+    },
+    {
+      "id": 17,
+      "name": "Techview Startups Inc",
+      "lat": 47.67726,
+      "lon": -122.06473
+    },
+    {
+      "id": 3,
+      "name": "Overlake Med Plaza",
+      "lat": 47.69528,
+      "lon": -122.1003
+    },
+    {
+      "id": 16,
+      "name": "Juniper Lane Homes",
+      "lat": 47.70164,
+      "lon": -122.09393
+    },
+    {
+      "id": 11,
+      "name": "Downtown Legal Group",
+      "lat": 47.70152,
+      "lon": -122.09772
+    },
+    {
+      "id": 15,
+      "name": "Eastside Fitness Club",
+      "lat": 47.70527,
+      "lon": -122.10905
+    },
+    {
+      "id": 13,
+      "name": "Harborview Storage",
+      "lat": 47.71515,
+      "lon": -122.14111
+    },
+    {
+      "id": 4,
+      "name": "Cedar Park Elementary",
+      "lat": 47.7093,
+      "lon": -122.17107
+    },
+    {
+      "id": 10,
+      "name": "Sunset Ridge HOA",
+      "lat": 47.70185,
+      "lon": -122.18072
+    },
+    {
+      "id": 1,
+      "name": "Riverside Cafe",
+      "lat": 47.68655,
+      "lon": -122.1785
+    },
+    {
+      "id": 5,
+      "name": "Willowbrook Retail",
+      "lat": 47.66697,
+      "lon": -122.17792
+    },
+    {
+      "id": 12,
+      "name": "Pinecrest Dental",
+      "lat": 47.65962,
+      "lon": -122.16284
+    },
+    {
+      "id": 2,
+      "name": "Blue Heron Apartments",
+      "lat": 47.65375,
+      "lon": -122.15471
+    },
+    {
+      "id": 18,
+      "name": "Green Valley Nursery",
+      "lat": 47.66307,
+      "lon": -122.11526
+    },
+    {
+      "id": 9,
+      "name": "Foothills Hardware",
+      "lat": 47.64884,
+      "lon": -122.11079
+    },
+    {
+      "id": 6,
+      "name": "Northgate Office Park",
+      "lat": 47.64868,
+      "lon": -122.12086
+    },
+    {
+      "id": 7,
+      "name": "Lakeview Condos",
+      "lat": 47.63139,
+      "lon": -122.15764
+    },
+    {
+      "id": 14,
+      "name": "Ridgemont Pharmacy",
+      "lat": 47.63735,
+      "lon": -122.16989
+    },
+    {
+      "name": "MetroSwift Distribution Center",
+      "lat": 47.674,
+      "lon": -122.1215
+    }
+  ],
+  "metrics": {
+    "naive_distance_km": 99.39,
+    "optimized_distance_km": 38.67,
+    "distance_saved_km_per_driver_per_day": 60.71,
+    "pct_distance_saved": 61.1,
+    "naive_time_hr": 2.84,
+    "optimized_time_hr": 1.1,
+    "minutes_saved_per_driver_per_day": 104.1,
+    "fleet_size": 12,
+    "daily_fleet_savings_usd": 524.56,
+    "annual_fleet_savings_usd": 136386.21
+  }
+}
