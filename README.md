@@ -1,4 +1,4 @@
-# MetroSwift Route Intelligence
+# TOM 6500 Final Project
 ### AI-Powered Last-Mile Delivery Route Optimizer — Supply Chain Digital Twin
 
 A proof-of-concept that shows how classical AI search algorithms (nearest-neighbor + 2-opt),
