@@ -55,7 +55,6 @@
   #map-svg { cursor: default; }
   #map-svg.add-mode { cursor: crosshair; }
 
-  /* side panel: params + stop editor */
   .side-panel { display: flex; flex-direction: column; gap: 14px; }
   .field-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
   .field-row label { font-size: 11.5px; color: var(--text-secondary); font-family: var(--accent-mono); }
@@ -133,6 +132,11 @@
           <div class="field-row"><label>Cost / km ($)</label><input type="number" id="param-cost" min="0.1" step="0.05" value="0.72"></div>
           <div class="field-row"><label>Avg speed (km/h)</label><input type="number" id="param-speed" min="5" max="100" value="35"></div>
           <div class="field-row"><label>Work days / yr</label><input type="number" id="param-workdays" min="1" max="365" value="260"></div>
+          
+          <div class="field-row" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line-strong);">
+            <label style="color: var(--optimized);">AI Time Prediction</label>
+            <div id="ai-time-display" style="font-family: var(--accent-mono); font-size: 14px; font-weight: 600; color: var(--text-primary);">--h --m</div>
+          </div>
         </div>
         <div class="panel" style="margin-bottom:0; flex:1;">
           <div class="panel-head"><div class="panel-title">Stops (<span id="stop-count">0</span>)</div><button class="btn small" id="add-stop-btn">+ Add</button></div>
@@ -165,7 +169,7 @@
     </div>
 
     <div class="methodology">
-      <b>Methodology:</b> Synthetic delivery data for a simulated Seattle-metro operator ("MetroSwift"). Fleet split uses a sweep heuristic — customers are ordered by compass angle from the depot and divided into contiguous pie-slice zones, one per driver (a standard cluster-first, route-second VRP approach). Each zone is then routed with nearest-neighbor construction + 2-opt local search. The "Before" baseline splits the same stop list into equal-sized chunks in entry order, with no geographic or route logic — approximating an unassisted dispatcher. AI Layer 2 is an LLM (Claude) that interprets natural-language constraints and explains the plan in plain English; it does not itself re-run the optimizer.
+      <b>Methodology:</b> Synthetic delivery data for a simulated Seattle-metro operator ("MetroSwift"). Fleet split uses a sweep heuristic — customers are ordered by compass angle from the depot and divided into contiguous pie-slice zones, one per driver (a standard cluster-first, route-second VRP approach). Each zone is then routed with nearest-neighbor construction + 2-opt local search. The "Before" baseline splits the same stop list into equal-sized chunks in entry order, with no geographic or route logic. AI Time Prediction uses a Multiple Linear Regression model trained in-browser on synthetic generated dispatch data. AI Layer 2 is an LLM (Claude) that interprets natural-language constraints.
     </div>
   </div>
 </div>
@@ -183,7 +187,93 @@
     addMode: false,
   };
   let nextId = Math.max(...state.stops.map(s => s.id)) + 1;
-  let lastProjection = null; // {lonMin, latMin, cosLat, scale, W, H, PAD}
+  let lastProjection = null; 
+
+  // ==========================================
+  // MACHINE LEARNING PIPELINE
+  // ==========================================
+  const mlModel = {
+    weights: [0, 0, 0, 0], // [Bias, w_dist, w_stops, w_drivers]
+    isTrained: false,
+    
+    // Normalization boundaries to prevent exploding gradients
+    maxDist: 300,
+    maxStops: 100,
+    maxDrivers: 10,
+
+    normalize: function(dist, stops, drivers) {
+      return [
+        dist / this.maxDist,
+        stops / this.maxStops,
+        drivers / this.maxDrivers
+      ];
+    },
+
+    generateDummyData: function() {
+      const data = [];
+      for (let i = 0; i < 500; i++) {
+        const dist = Math.random() * 150 + 5; 
+        const stops = Math.floor(Math.random() * 40) + 1;
+        const drivers = Math.floor(Math.random() * 5) + 1;
+        
+        // Underlying "true" behavior + random noise (variance)
+        const actualMinutes = (dist / 35 * 60) + (stops * 6.5) - (drivers * 4) + (Math.random() * 30 - 15);
+        
+        data.push({
+          features: this.normalize(dist, stops, drivers),
+          label: Math.max(15, actualMinutes) // Ensure no negative times
+        });
+      }
+      return data;
+    },
+
+    train: function() {
+      console.log("Training ML model on dummy dataset...");
+      const dataset = this.generateDummyData();
+      const m = dataset.length;
+      const epochs = 5000;
+      const learningRate = 0.1; // Aggressive learning rate due to normalized features
+
+      for (let epoch = 0; epoch < epochs; epoch++) {
+        let grad0 = 0, grad1 = 0, grad2 = 0, grad3 = 0;
+
+        for (let i = 0; i < m; i++) {
+          const [x1, x2, x3] = dataset[i].features;
+          const y = dataset[i].label;
+          
+          // h_theta(x) = bias + (w1*x1) + (w2*x2) + (w3*x3)
+          const prediction = this.weights[0] + (this.weights[1] * x1) + (this.weights[2] * x2) + (this.weights[3] * x3);
+          const error = prediction - y;
+
+          grad0 += error;
+          grad1 += error * x1;
+          grad2 += error * x2;
+          grad3 += error * x3;
+        }
+
+        // Update weights via Gradient Descent
+        this.weights[0] -= learningRate * (grad0 / m);
+        this.weights[1] -= learningRate * (grad1 / m);
+        this.weights[2] -= learningRate * (grad2 / m);
+        this.weights[3] -= learningRate * (grad3 / m);
+      }
+      
+      console.log("Model trained. Final weights:", this.weights);
+      this.isTrained = true;
+    },
+
+    predict: function(dist, stops, drivers) {
+      if (!this.isTrained) this.train();
+      
+      const [x1, x2, x3] = this.normalize(dist, stops, drivers);
+      const prediction = this.weights[0] + (this.weights[1] * x1) + (this.weights[2] * x2) + (this.weights[3] * x3);
+      
+      return Math.max(0, prediction); 
+    }
+  };
+
+  // Train the model immediately
+  mlModel.train();
 
   // ---------- geometry ----------
   function haversineKm(a, b) {
@@ -324,7 +414,7 @@
     const d = project(state.depot, bounds);
     svg.appendChild(el('rect', { x: d.x-6, y: d.y-6, width: 12, height: 12, fill: 'var(--depot)', rx: 2 }));
 
-    // stop markers colored by which driver owns them (based on optimized clusters for consistency)
+    // stop markers colored by which driver owns them
     const ownerColor = {};
     fleet.optRoutes.forEach((route, di) => { route.forEach(p => { if (p.id) ownerColor[p.id] = DRIVER_COLORS[di % DRIVER_COLORS.length]; }); });
 
@@ -342,6 +432,36 @@
     renderKPIs();
     renderDriverTable();
     renderStopList();
+    
+    // Trigger AI prediction update whenever the UI re-renders
+    updateAITimePrediction();
+  }
+
+  // ---------- ML TIME PREDICTION LOGIC ----------
+  let predictionTimeout;
+  function updateAITimePrediction() {
+    const display = document.getElementById('ai-time-display');
+    display.style.opacity = '0.5';
+    display.textContent = 'ML Inference...';
+    
+    clearTimeout(predictionTimeout);
+    
+    // Extract live features from the dashboard state
+    const optKm = fleet.optRoutes.reduce((s, r) => s + routeDistance(r), 0);
+    const stopsCount = state.stops.length;
+    const driversCount = state.params.drivers;
+
+    // Simulate network/inference latency
+    predictionTimeout = setTimeout(() => {
+        // Pass features into our trained ML model
+        const predictedTotalMinutes = mlModel.predict(optKm, stopsCount, driversCount);
+        
+        const hours = Math.floor(predictedTotalMinutes / 60);
+        const mins = Math.round(predictedTotalMinutes % 60);
+        
+        display.style.opacity = '1';
+        display.textContent = `${hours}h ${mins}m`;
+    }, 450); 
   }
 
   function animateDrawIn() {
