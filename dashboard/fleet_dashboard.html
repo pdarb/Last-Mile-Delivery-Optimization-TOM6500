@@ -156,6 +156,12 @@
     <div class="panel">
       <div class="console-head"><div class="console-dot"></div><div class="panel-title">AI Dispatch Console</div></div>
       <div class="console-sub">Ask about constraints (time windows, priority stops) or ask the AI to explain the current fleet plan. Powered by Claude.</div>
+      <div class="field-row" style="margin-bottom: 14px; align-items: center;">
+        <label for="api-key-input" style="white-space: nowrap;">Claude API Key</label>
+        <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off" style="flex:1; width:auto; margin-left:10px; background: var(--panel-raised); border: 1px solid var(--line-strong); border-radius: 6px; color: var(--text-primary); font-family: var(--accent-mono); font-size: 12px; padding: 6px 9px;">
+        <button class="btn small" id="save-key-btn" style="margin-left:8px;">Save</button>
+      </div>
+      <div class="hint" id="key-status" style="margin-top:-8px; margin-bottom: 10px;">No key saved yet \u2014 paste your Claude API key above and click Save. Get one free at platform.claude.com (new accounts get $5 in credits).</div>
       <div class="quick-prompts" id="quick-prompts">
         <button class="quick-prompt" data-q="Explain how stops were split across the drivers and why each driver's route makes sense.">Explain the fleet plan</button>
         <button class="quick-prompt" data-q="One customer needs delivery before 10am. How would that constraint be handled?">Add a time constraint</button>
@@ -605,6 +611,24 @@
   const chatLog = document.getElementById('chat-log');
   const input = document.getElementById('console-input');
   const sendBtn = document.getElementById('console-send');
+  const apiKeyInput = document.getElementById('api-key-input');
+  const keyStatus = document.getElementById('key-status');
+  const saveKeyBtn = document.getElementById('save-key-btn');
+
+  // API key lives only in memory for this page load — never hardcode a real
+  // key into this file if you share or upload it anywhere (e.g. GitHub).
+  // It resets if you reload the page, so you'll need to paste it again after a refresh.
+  let CLAUDE_API_KEY = '';
+
+  saveKeyBtn.addEventListener('click', () => {
+    const val = apiKeyInput.value.trim();
+    if (!val.startsWith('sk-ant-')) {
+      keyStatus.textContent = 'That doesn\u2019t look like a Claude API key (should start with "sk-ant-"). Saved anyway, but double-check it.';
+    } else {
+      keyStatus.textContent = 'Key saved for this page load. Ready to chat with the AI dispatcher.';
+    }
+    CLAUDE_API_KEY = val;
+  });
 
   function addMsg(role, text) {
     const div = document.createElement('div'); div.className = 'msg ' + role;
@@ -621,6 +645,11 @@
   }
 
   async function askAI(question) {
+    if (!CLAUDE_API_KEY) {
+      addMsg('user', question);
+      addMsg('ai', 'No API key saved yet. Paste your Claude API key above (starts with "sk-ant-") and click Save, then ask again.');
+      return;
+    }
     addMsg('user', question);
     const thinking = addMsg('ai', 'Thinking…');
     sendBtn.disabled = true;
@@ -632,14 +661,24 @@ Current fleet plan (sweep clustering + 2-opt per driver): ${fleetSummary()}.
 Total optimized distance ${optKm.toFixed(1)} km vs a naive equal-split baseline of ${naiveKm.toFixed(1)} km.
 Answer the dispatcher's question in 2-4 concise sentences, plain English, referencing specific driver numbers or stop names where relevant. If asked a hypothetical (new constraint, adding a driver), reason qualitatively about the likely effect without pretending to re-run the optimizer yourself.`;
       const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, system: systemPrompt, messages: [{ role: "user", content: question }] })
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": CLAUDE_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 500, system: systemPrompt, messages: [{ role: "user", content: question }] })
       });
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errBody.slice(0, 200)}`);
+      }
       const data = await response.json();
       const text = (data.content || []).map(b => b.text || '').join('\n').trim() || 'No response received.';
       thinking.innerHTML = '<span class="tag">AI DISPATCHER</span>' + text;
     } catch (err) {
-      thinking.innerHTML = '<span class="tag">AI DISPATCHER</span>Could not reach the AI service right now.';
+      thinking.innerHTML = '<span class="tag">AI DISPATCHER</span>Could not reach the AI service (' + err.message + '). Double-check your API key is correct and has remaining credit.';
       console.error(err);
     }
     sendBtn.disabled = false;
