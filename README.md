@@ -57,12 +57,12 @@ runs in the browser.
 | Route construction | Nearest-neighbor heuristic | Classical AI / greedy search |
 | Route improvement | 2-opt local search | Combinatorial optimization / metaheuristic |
 | Fleet assignment (multi-driver) | Sweep (angle-based) clustering | VRP heuristic — cluster-first, route-second |
-| Constraint interpretation & explanation | Claude (LLM) via Anthropic Messages API | Generative AI / natural language reasoning |
+| Constraint interpretation & explanation | Gemini (LLM) via Gemini Studio API | Generative AI / natural language reasoning |
 
 **Important distinction:** the routing/optimization layer is classical operations-research
 search (no training data, no model weights, no neural network) — legitimately "AI" in the
 search/optimization sense, but not machine learning. The one place a trained model is actually
-involved is the AI Dispatch Console, which calls Claude (`claude-sonnet-4-6`) to interpret
+involved is the AI Dispatch Console, which calls Gemini to interpret
 natural-language questions/constraints and explain the current plan in plain English. It does
 **not** re-run the optimizer — it reasons qualitatively about the live route data passed to it
 as context.
